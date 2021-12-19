@@ -107,28 +107,28 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
             region: alternateTitle.slice(-2)
           }
 
-          row_transformed['Debug'] = {
+          row_transformed.Debug = {
             region_abbreviation: regionAbbreviation,
             regions_checked: []
           };
-          console.log(row_transformed['Title'],row_transformed['Debug']);
+          //console.log(row_transformed['Title'],row_transformed['Debug']);
           var regionMapped = false;
           Object.keys(regionAbbreviationMap).forEach(region => {
-            console.log(Object.keys(regionAbbreviationMap),region, regionAbbreviationMap[region], regionAbbreviationMap[region].indexOf(regionAbbreviation));
-            row_transformed['Debug'].regions_checked.push(region);
+            //console.log(Object.keys(regionAbbreviationMap),region, regionAbbreviationMap[region], regionAbbreviationMap[region].indexOf(regionAbbreviation));
+            row_transformed.Debug.regions_checked.push(region);
             if(regionAbbreviationMap[region].indexOf(regionAbbreviation) >= 0) {
-              if (!regionMapped) {
+              if (regionAbbreviationMap[region].indexOf(regionAbbreviation) == 0) {
                 regionMapped = true;
                 row_transformed['Releases'][region]['Title'] = alternateTitle.slice(alternateTitle.length*-1,-2);
               }
               else {
-                console.warn("Missed Region See Debug");
+                console.log("Missed Region See Debug");
                 row_transformed.Debug['Missed Region'] = {regionAbbreviation, title: alternateTitle.slice(alternateTitle.length*-1,-2)};
               }
             }
           });
 
-          console.log(row_transformed['Title'],row_transformed['Debug']);
+          //console.log(row_transformed);
 
 
           //List Regiontags of titles for design informing
@@ -148,12 +148,13 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
           if(!(row_transformed['Releases'][releaseKey].Title)) {
             row_transformed['Releases'][releaseKey].Title = row_transformed['Title'];
           }
-          // console.log(releaseKey, row_transformed['Releases'][releaseKey]);
+          //console.log(releaseKey, row_transformed['Releases'][releaseKey]);
         }
       });
-
-      if (Object.keys(row_transformed.Debug)>0) {
-        console.log(row_transformed);
+      
+      //console.log(Object.keys(row_transformed.Debug));
+      if (Object.keys(row_transformed.Debug).length>0) {
+        console.log({title: row_transformed['Title'], releases: row_transformed['Releases']});
       }
       table_data_transformed.push(row_transformed)
     });
