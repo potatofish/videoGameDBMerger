@@ -73,7 +73,7 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
 
     var regionAbbreviationMap = {
       Asia : ['JP',' †','KR'],
-      Europe : ['EU','FR'],
+      Europe : ['EU','FR', 'ER'], //ER is short for GER
       'North America' : ['NA', 'MX'], 
       Other: ['BR','ER']
     };
@@ -84,15 +84,15 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
       //console.log(row);
       var row_transformed = {};
       row_transformed['Releases'] = {
-        'Asia': {'Date': row['Release date Japan']},
-        'North America': {'Date': row['Release date North America']},
-        'Europe': {'Date': row['Release date PAL region']},
-        'Other': {}
+        'Asia': {'Date': row['Release date Japan'], AlternateTitles: []},
+        'North America': {'Date': row['Release date North America'], AlternateTitles: []},
+        'Europe': {'Date': row['Release date PAL region'], AlternateTitles: []},
+        'Other': {AlternateTitles: []}
       };
       row_transformed['Debug'] = {};
       var titleArray = row['Title'].split('•');
 
-      //row_transformed['RAW Titles'] = row['Title'];
+      
       //row_transformed['Array Titles'] = JSON.stringify([titleArray, titleArray.length]);
       row_transformed['Title'] = titleArray.shift();
       //row_transformed['Array TitlesX'] = JSON.stringify([rowSplit, rowSplit.length]);
@@ -107,26 +107,37 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
             region: alternateTitle.slice(-2)
           }
 
+          /*
           row_transformed.Debug = {
             region_abbreviation: regionAbbreviation,
             regions_checked: []
           };
+           */
           //console.log(row_transformed['Title'],row_transformed['Debug']);
           var regionMapped = false;
           Object.keys(regionAbbreviationMap).forEach(region => {
             //console.log(Object.keys(regionAbbreviationMap),region, regionAbbreviationMap[region], regionAbbreviationMap[region].indexOf(regionAbbreviation));
-            row_transformed.Debug.regions_checked.push(region);
+            //row_transformed.Debug.regions_checked.push(region);
             if(regionAbbreviationMap[region].indexOf(regionAbbreviation) >= 0) {
               if (regionAbbreviationMap[region].indexOf(regionAbbreviation) == 0) {
                 regionMapped = true;
                 row_transformed['Releases'][region]['Title'] = alternateTitle.slice(alternateTitle.length*-1,-2);
               }
               else {
+                console.log({region, release: row_transformed['Releases'][region]}, regionAbbreviation);
+                row_transformed['Releases'][region].AlternateTitles.push({title: alternateTitle.slice(alternateTitle.length*-1,-2), region: regionAbbreviation});
                 console.log("Missed Region See Debug");
+                row_transformed.Debug['RAW Titles'] = row['Title'];
                 row_transformed.Debug['Missed Region'] = {regionAbbreviation, title: alternateTitle.slice(alternateTitle.length*-1,-2)};
               }
             }
           });
+
+          // There is no region, so save this as an alternate title under other
+          if (!(regionMapped)) {
+            console.log({alternateTitle,alternateTitle });
+            row_transformed['Releases'].Other.AlternateTitles.push({alternateTitle});
+          }
 
           //console.log(row_transformed);
 
@@ -154,7 +165,11 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
       
       //console.log(Object.keys(row_transformed.Debug));
       if (Object.keys(row_transformed.Debug).length>0) {
-        console.log({title: row_transformed['Title'], releases: row_transformed['Releases']});
+        console.dir({
+          title: row_transformed['Title'], 
+          releases: row_transformed['Releases'],
+          debug: row_transformed.Debug
+        }, { depth: null });
       }
       table_data_transformed.push(row_transformed)
     });
