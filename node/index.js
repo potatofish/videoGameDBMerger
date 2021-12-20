@@ -119,12 +119,12 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
             //console.log(Object.keys(regionAbbreviationMap),region, regionAbbreviationMap[region], regionAbbreviationMap[region].indexOf(regionAbbreviation));
             //row_transformed.Debug.regions_checked.push(region);
             if(regionAbbreviationMap[region].indexOf(regionAbbreviation) >= 0) {
+              regionMapped = true;
               if (regionAbbreviationMap[region].indexOf(regionAbbreviation) == 0) {
-                regionMapped = true;
                 row_transformed['Releases'][region]['Title'] = alternateTitle.slice(alternateTitle.length*-1,-2);
               }
               else {
-                console.log({region, release: row_transformed['Releases'][region]}, regionAbbreviation);
+                //console.log({region, release: row_transformed['Releases'][region]}, regionAbbreviation);
                 row_transformed['Releases'][region].AlternateTitles.push({title: alternateTitle.slice(alternateTitle.length*-1,-2), region: regionAbbreviation});
                 console.log("Missed Region See Debug");
                 row_transformed.Debug['RAW Titles'] = row['Title'];
