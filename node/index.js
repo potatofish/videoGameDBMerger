@@ -71,9 +71,22 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
       table_data_clean.push(row_clean)
     });
 
-    var regionAbbreviationMap = {
+    //TODO Validate that Toystory has an alternate title under other
+    //TODO Find other bad suffixer ("Archer MacLean's Super Dropzone" maybe?)
+
+
+    //TODO 'Manchester United Championship Soccer•Lothar Matthäus Super SoccerGER' does not fit the below pattern
+    //TODO "Kevin Keegan's Player Manager•K.H. Rummenigge's Player ManagerGER" does not fit the below pattern
+    var old_regionAbbreviationMap = {
       Asia : ['JP',' †','KR'],
       Europe : ['EU','FR', 'ER'], //ER is short for GER
+      'North America' : ['NA', 'MX'], 
+      Other: ['BR','ER']
+    };
+
+    var regionAbbreviationMap = {
+      Asia : ['JP','KR'],
+      Europe : ['EU','FR', 'GER'], //ER is short for GER
       'North America' : ['NA', 'MX'], 
       Other: ['BR','ER']
     };
@@ -90,17 +103,21 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
         'Other': {AlternateTitles: []}
       };
       row_transformed['Debug'] = {};
-      var titleArray = row['Title'].split('•');
+      var titleArray = row['Title'].replace(' †','').replace(' †','').split('•');
 
       
       //row_transformed['Array Titles'] = JSON.stringify([titleArray, titleArray.length]);
       row_transformed['Title'] = titleArray.shift();
       //row_transformed['Array TitlesX'] = JSON.stringify([rowSplit, rowSplit.length]);
 
+
       if (titleArray.length > 0) {
         //var regionList =  {};
         titleArray.forEach(alternateTitle => {
           var regionAbbreviation = alternateTitle.slice(-2);
+          if (regionAbbreviation == "ER") {
+            regionAbbreviation = alternateTitle.slice(-3);
+          }
 
           var altTitleObject = {
             title: alternateTitle.slice(alternateTitle.length*-1,-2),
@@ -121,14 +138,14 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
             if(regionAbbreviationMap[region].indexOf(regionAbbreviation) >= 0) {
               regionMapped = true;
               if (regionAbbreviationMap[region].indexOf(regionAbbreviation) == 0) {
-                row_transformed['Releases'][region]['Title'] = alternateTitle.slice(alternateTitle.length*-1,-2);
+                row_transformed['Releases'][region]['Title'] = alternateTitle.slice(alternateTitle.length*-1,regionAbbreviation.length*-1);
               }
               else {
                 //console.log({region, release: row_transformed['Releases'][region]}, regionAbbreviation);
-                row_transformed['Releases'][region].AlternateTitles.push({title: alternateTitle.slice(alternateTitle.length*-1,-2), region: regionAbbreviation});
+                row_transformed['Releases'][region].AlternateTitles.push({title: alternateTitle.slice(alternateTitle.length*-1,regionAbbreviation.length*-1), region: regionAbbreviation});
                 console.log("Missed Region See Debug");
                 row_transformed.Debug['RAW Titles'] = row['Title'];
-                row_transformed.Debug['Missed Region'] = {regionAbbreviation, title: alternateTitle.slice(alternateTitle.length*-1,-2)};
+                //row_transformed.Debug['Missed Region'] = {regionAbbreviation, title: alternateTitle.slice(alternateTitle.length*-1,regionAbbreviation.length*-1)};
               }
             }
           });
@@ -136,6 +153,7 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
           // There is no region, so save this as an alternate title under other
           if (!(regionMapped)) {
             console.log({alternateTitle,alternateTitle });
+            row_transformed.Debug['RAW Titles'] = row['Title'];
             row_transformed['Releases'].Other.AlternateTitles.push({alternateTitle});
           }
 
@@ -155,9 +173,21 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
           delete row_transformed['Releases'][releaseKey].Date;
         }
 
+        //TODO 'Dragon Ball Z: Super Butouden 3 †•Dragon Ball Z: ChomutujeonKR †•Dragon Ball Z: Ultime Menace FR' has wrong EU title  
+        //TODO Dragon Ball Z: Super Butouden 2 †•Dragon Ball Z 2: la Légende SaienFR' has wrong EU title
+
+
         if(row_transformed['Releases'][releaseKey].Date) {
           if(!(row_transformed['Releases'][releaseKey].Title)) {
-            row_transformed['Releases'][releaseKey].Title = row_transformed['Title'];
+            if ((row_transformed['Releases'][releaseKey].AlternateTitles.length > 0)) {
+              // Table Makes Some Choices with priorities on naming.
+              if (row_transformed['Title'] == 'Dragon Ball Z: Super Butouden 2' || row_transformed['Title'] == 'Dragon Ball Z: Super Butouden 3' ) {
+                row_transformed['Releases'][releaseKey].Title = row_transformed['Releases'][releaseKey].AlternateTitles[0].title;
+              }
+              else {
+                row_transformed['Releases'][releaseKey].Title = row_transformed['Title'];
+              }
+            }
           }
           //console.log(releaseKey, row_transformed['Releases'][releaseKey]);
         }
@@ -173,6 +203,7 @@ var url = "https://en.wikipedia.org/wiki/List_of_Super_Nintendo_Entertainment_Sy
       }
       table_data_transformed.push(row_transformed)
     });
+    console.log({'Games Developed' : table_data_transformed.length});
     
     //console.log(regionList);
     var renderedHTMLdata = $.html();
